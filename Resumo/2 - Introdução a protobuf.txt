@@ -1,0 +1,156 @@
+Introdução a protobuf:
+
+O Protobuf (Protocol Buffers) é uma das engrenagens mais importantes no uso de gRPC, ele vai sereliaziar nossos dados no formato Binário e com isso os dados ficam menores favorecendo o uso da banda de rede (consome menos) e na persistencia dos dados;
+Outra vantagem do Protobuf (talvez a mais importante) é que ele atuará como uma IDL (Interface Definition Language), ou seja, nós vamos definir em um arquivo do protobuf os dados de entrada (em API chamavamos de AlgumaCoisaRequest), os dados de saída (em API chamavamos de AlgumaCoisaResponse ou AlgumaCoisaDTO) e a assinaturá do serviço (do Endpoint - pense nesse como uma interface Controller que nossa classe Controller implementará), esse arquivo tem a extensão ".proto". Depois basta compilar esse aquivo ".proto" para a linguagem que quisermos e isso resultará nas classes de entrada (conhecida como AlgumaCoisaRequest), nas classes de saída (conhecida como AlgumaCoisaResponse ou DTO) e também os métodos/funções (por exemplo cadastra).
+Para compilar o arquivo ".proto" podemos usar o seu compilador específico ou alguma ferramenta de Build como Gradle. Usaremos a segunda opção (Gradle), para isso vamos precisar adicionar algumas dependências;
+No seguinte site https://developers.google.com/protocol-buffers/docs/proto3 há orientações de comp criar o arquivo ".proto", pois teremos que sempre consultar algumas coisa, por exemplo os tipos de variáveis (No java usamos Long, mas no ".proto" teremos que usar o int64 para representá-lo)
+O arquivo ".proto" também será usado na hora de consumir a aplicação, quando estavamos fazendo a API podíamos consultar através do aplicativo Postman, agora vamos usar o Bloomrpc e nele teremos que importar o arquivo ".proto"
+
+RESUMINDO: Agora nossa aplicação terá um CONTRATO a ser seguido (arquivo .proto), nesse contrato definimos as classes de entrada(REQUEST) as classes de saida (RESPONSE ou DTO) e assinatura dos serviços com os métodos (Pense nesse como uma interface Controller "Pai" que nossa classe Controller implementará). Ao compilar esse CONTRATO vamos ganhar as classes de RESPONSE E REQUEST e a classe controller que será feito por nós usará a implementação dos serviços que o arquivo .proto gerou (classe controller herdará o serviço do arquivo .proto)
+
+Vamos criar um aplicativo para ter o contato com o arquivo ".proto". Siga o passo a passo:
+
+1) Entre no site: https://micronaut.io/launch/ em Application Type vamos selecionar gRPC Application, em Java Version = 11, Base Package = br.com.zup, Name= protobuf, Micronaut Version = Mais recente, Language = Kotlin, Build = Gradle, Test Framework - Junit. Depois basta clicar no botão Generate Project e fazer o download em Zip (depois abrí-lo na IDE)
+
+2)No projeto que baixamos já vai vir um arquivo ".proto" por padrão, vamos editá-lo, mas antes temos que ter em mente o que queremos fazer! Nossa aplicação será um cadastro de Funcionário!
+
+3)Aqui vamos ver e entender o arquivo .proto gerado automaticamente. No pacote src/main/proto há o arquivo .proto, vamos abrí-lo e ver:
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "br.com.zup";
+option java_outer_classname = "Protobuf";
+
+
+package br.com.zup;
+
+service ProtobufService {
+  rpc send (ProtobufRequest) returns (ProtobufReply) {}
+}
+
+message ProtobufRequest {
+  string name = 1;
+}
+
+message ProtobufReply {
+  string message = 1;
+}
+
+Explicação:
+syntax = vai definir a versão do protobuf que vamos usar, o 3 é o indicado e o mais recente;
+service ProtobufService = é a assinatura de serviço que queremos implementar (nesse exemplo vamos fazer depois um service com nome cadastroFuncionario), é bom pensar nesse como uma interface controller que só tem assinatura de métodos, pois quando criarmos nossa classe controller teremos que implementar esse service;
+rpc send () returns () = aqui temos o método do nosso serviço, veja que ele recebe um request que em api chamavamos do mesmo nome e retorna um Reply que em api chamavamos de response ou dto;
+message = os parâmetros utilizados no método send (request e reply) são defenidos como message. Será aqui que vamos indicar os atributos de cada um. Para isso temos que por o tipo, nome do atributo e dar uma ordem para eles, pois tudo isso se tornará binário, logo precisamos dar uma ordem!
+option java_multiple_files = Ao complilar o .proto vamos ganhar essas classes que definimos no contrato, essa configuração indica se vamos querer gerar todas classes dentro de um mesmo arquivo ou separá-los cada classe em um arquivo. O valor true indica que vamos separar;
+option java_package = Utilizando java ou kotlin esse comando vai permitir indicar o pacote que queremos deixar as classes geradas;
+option java_outer_classname = Indica o nome que queremos dar a classe Service que será gerada ( é a classe Controller Pai)
+obs: Quando tivermos que usar algum tipo extra (por exemplo Timestamp) teremos que fazer o import nesse arquivo!
+
+4) Agora vamos ver o que o arquivo Build.Gradle precisa ser para compilar o arquivo .proto:
+Na seção Plugins precisamos ter: 
+	id("com.google.protobuf") version "0.8.15"
+
+Dentro do build.gradle:
+
+protobuf {
+    protoc { artifact = "com.google.protobuf:protoc:3.14.0" }
+    plugins {
+        grpc { artifact = "io.grpc:protoc-gen-grpc-java:1.33.1" }
+    }
+    generateProtoTasks {
+        all()*.plugins { grpc {} }
+    }
+}
+
+5) Para testar e fazer uma requisição temos que levantar o serviço/servidor (rodar a função main com código que levanta o servidor, podemos criar uma função personalizada ou rodar a classe Application que já vem no projeto). Com o servidor levantado vamos abri a ferramenta BloomRPC, clicar no icone "+" para adicionar nosso arquivo .proto, após adicionar o proto o campo editor já será preenchido, basta alterar o campo editor com os dados que queremos e clicar no icone "play"
+Para instalar o BloomRPC basta entrar em https://github.com/uw-labs/bloomrpc/releases baixar o arquivo .exe e executar.
+
+6) Lembre-se sempre temos que fazer primeiro o contrato (arquivo .proto) para depois codificar nossa classe controller!
+
+7) Como compilar o .proto dentro da IDE? Basta clicar no icone Gradle -> icone do Gradle novamente (Execute Gradle Task) -> escrever: gradle clean compileJava
+
+OBS: Ao compilar o proto diversas classes são geradas para nós, o protobuf gerará também as classes Stubs, que são as responsáveis por transmitir as mensagens serializadas em binário!
+Atenção:
+O próprio arquivo .proto virará uma classe, mas não é ela que entendemos como interface controller ou controller pai. A interface controller/controller pai será gerada do service descrito dentro do arquivo .proto. A classe gerada desse service que entendemos como interface controller/pai vai ser gerada com o nome: nome dado ao service dentro do arquivo .proto mais Grpc no final
+
+Veja como fica um servidor personalizado + implementação de um serviço:
+
+fun main() {
+    val server = ServerBuilder
+        .forPort(50051)
+        .addService(FuncionarioEndpoint())
+        .build()
+
+    server.start()
+    server.awaitTermination()
+}
+
+
+class FuncionarioEndpoint : FuncionarioServiceGrpc.FuncionarioServiceImplBase() {
+
+    override fun cadastrar(request: FuncionarioRequest?, responseObserver: StreamObserver<FuncionarioResponse>?) {
+
+        println(request!!)
+
+        var nome: String? = request.nome
+        if(!request.hasField(FuncionarioRequest.getDescriptor().findFieldByName("nome"))){
+            nome = "[???]"
+        }
+
+        val instant = LocalDateTime.now().atZone(ZoneId.of("UTC")).toInstant()
+        val criadoEm = Timestamp.newBuilder()
+            .setSeconds(instant.epochSecond)
+            .setNanos(instant.nano)
+            .build()
+
+        val response = FuncionarioResponse.newBuilder()
+            .setNome(nome)
+            .setCriadoEm(criadoEm)
+            .build()
+
+        responseObserver?.onNext(response)
+        responseObserver?.onCompleted()
+    }
+}
+
+Veja como ficou nossa classe Client, lembre-se devemos subir o servidor (deixá-lo rodando) e depois executar a classe client:
+
+fun main(){
+
+    //Para criar um Client precisamos primeiro de um canal - Channel
+    val channel = ManagedChannelBuilder
+        .forAddress("localhost", 50051)
+        .usePlaintext()
+        .build()
+
+    //Criando um client
+    val client = FuncionarioServiceGrpc.newBlockingStub(channel)
+
+    //Criando nosso request
+    val request = FuncionarioRequest.newBuilder()
+        .setNome("Yuri Matheus")
+        .setCpf("000.000.000-00")
+        .setIdade(22)
+        .setSalario(2000.0)
+        .setAtivo(true)
+        .setCargo(Cargo.DEV)
+        .addEnderecos(Endereco.newBuilder()
+            .setLogradouro("Rua das Tabajaras, 100")
+            .setCep("00000-000")
+            .setLogradouro("Na rua do mercado")
+            .build())
+        .build()
+
+    //O client foi criado da classe de serviço FuncionarioServiceGrpc (essa foi descrita no nosso arquivo .proto)
+    // por isso ele já tem o método cadastrar()
+    val response = client.cadastrar(request)
+
+    println(response)
+
+}
+
+No próximo capitulo/curso/projeto vamos usar as anotações do Micronaut para criar tudo isso com mais facilidade!!!!!!!!!!!
+
+
+

@@ -1,0 +1,71 @@
+O que é GRPC:
+
+⦁	Esse é um framework de RPC - Remote Procedure Call da Google.
+Basicamente um RPC é permitir cahamar uma função (método) que está em outro PC/Servidor, ou seja, localmente executar uma função remota que está em outro lugar;
+
+⦁	Para entender melhor o que é RPC vamos pensar em uma loja de e-commerce:
+
+Em uma aplicação de e-commerce temos a aplicação de venda (vai expor produtos, pegar dados do comprador, etc) só que quando um usuário faz uma compra o seu pagamento será analisado por um serviço de Pagamento. Esse serviço pode estar dentro da mesma aplicação que fez a venda (nesse caso aplicação de venda fará uma chamada local para o serviço de pagamento) ou estar em outra aplicação, em outra maquina, ou seja, estar na arquitetura de Sistemas Distribuídos (nesse caso ocorrerá uma chamada remota).
+
+Vamos focar no cenário de Sistemas de Distribuídos, nesse exemplo teríamos no mínimo dois serviços que podem estar em máquinas diferentes, em linguagens e tecnologias diferentes. Como um precisa se comunicar com outro ambos vão utilizar a rede para enviar e receber requisições (Request e Response) e o RPC é um framework que vai facilitar essa comunicação, no nosso estudo vamos usar o GRPC.
+
+No exemplo do ecommerce vamos ter a aplicação de venda como um RPC Client e o serviço de pagamento como RPC Server e será o RPC que vai serelializar e deserelializar a mensagem enviada nas requisições.
+
+⦁	Frameworks RPC:
+
+Ao utilizar um frameowk de RPC teremos a sensação de estar fazendo uma chamada local, pois muita coisa é feita por baixo dos panos (framework vai resolver as coisas complexas) e essa fato ganha o nome de Location Trasnparency;
+
+⦁	Chamadas remotas em Sistemas Distribuidos são complexas, pois:
+
+Pode haver bug na aplicação client;
+
+Pode haver bug na aplicação server;
+
+A internet pode cair ou haver perda de pacote;
+
+Em qualquer parte do caminho pode haver um problema e a mensagem não ser processada corretamente;
+
+Outros problemas;
+
+O framework vai nos dar a Location Transparency (o código vai parecer ser uma chamada remota), mas um BOM framework não pode nos esconder as complexidades citadas anteriormente, pois caberá a nós desenvolvedores a resolver essa complexidade da melhor maneira possível de acordo com a nossa necessidade!
+
+⦁	Os frameworks de RPC:
+
+Já tivemos o CORBA, ele foi bom na sua época, era rápido, mas seu uso era complexo, exigia escrita de muito código para funcionamento da tecnologia;
+
+Microsfot criou o DCOM;
+
+A sun na época criou o JAVA RMI, esse era muito rápido, mas esse só funcionava no ecosistema JAVA;
+
+Tem o SOAP, esse transportava XML no protocolo HTTP, ele permitia a comunicação entre  sistemas feitos em tecnologias distintas, mas era/é lento;
+
+Thrift, esse foi feito pelo Facebook;
+
+A Google criou o gRPC (antes conhecido como Stub, era usado com esse nome pelo pessoal da Google). Esse é muito poderoso! Pois o pessoal estudou todos os frameworks anteriores.
+
+⦁	gRPC  vs. Rest API's com JSON:
+
+O gRPC chega usar 3x menos banda na comunicação e 11x menos uso de CPU!;
+
+Outra vantagem real do GRPC é devido o uso da IDL, é uma linguagem que vai descrever nosso serviço e a mesma poderá ser usada por diversas linguagens e plataformas!
+
+Quando estamos com sistemas criticos e precisamos de baixa latencia e alta performace vamos de gRPC!
+
+Achei essa comparação na net:
+
+As APIs baseadas em RPC são ótimas para ações (ou seja, procedimentos ou comandos). 
+
+As APIs baseadas em REST são ótimas para modelar seu domínio (isto é, recursos ou entidades), tornando o CRUD (criar, ler, atualizar, excluir) disponível para todos os seus dados.
+
+
+
+⦁	gRPC:
+
+Esse framework foi pensado para ser simples (idiomático, com linguagem única), ser escalável, ser perfomático e interoperável (funcionar em diversas tecnologias);
+
+A mensagem transmitida no gRPC é em binário
+
+⦁	gRPC se baseia no PROTOBUF:
+
+O que é Protobuf? É um protocolo que converte as suas mensagens em formato binario, e com ele é possivel compactar a mensagem de tal maneira que vamos usar menos a banda de rede e exigir menos da CPU, e isso justifica a vantagem que GRPC tem em cima de API Rest com JSON.
+
